@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Money Dashboard 💰</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+            color: #ff8c00;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: none; /* Hidden until setup completes */
+        }
+
+        /* Setup Modal Styles */
+        #setupModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 31, 63, 0.95);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .setup-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 4px solid #ff8c00;
+            max-width: 600px;
+            width: 100%;
+            color: #001f3f;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .setup-content h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ff8c00;
+            font-size: 2em;
+        }
+
+        .setup-group {
+            margin-bottom: 15px;
+        }
+
+        .setup-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #001f3f;
+        }
+
+        .setup-group input[type="text"], .setup-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #003366;
+            border-radius: 8px;
+            font-family: 'Comic Sans MS', sans-serif;
+            font-size: 1.1em;
+        }
+
+        .accounts-list-setup {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .account-item-setup {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: #f0f4f8;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .account-item-setup input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+        }
+        
+        .account-item-setup input[type="number"] {
+            width: 100px;
+            padding: 8px;
+        }
+
+        .account-item-setup select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-family: inherit;
+        }
+
+        .btn-remove {
+            background: #ff4c4c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .setup-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-primary {
+            background: #ff8c00;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .btn-primary:hover { background: #e67e00; }
+        
+        .btn-secondary {
+            background: #003366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* Dashboard Styles */
+        .logo-section {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 3px solid #ff8c00;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .logo-section img {
+            max-width: 100%;
+            height: auto;
+            max-height: 150px; 
+            display: inline-block;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(0, 31, 63, 0.6);
+            padding: 25px;
+            border-radius: 20px;
+            border: 3px solid #ff8c00;
+            position: relative;
+        }
+        
+        .btn-edit-setup {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid #ff8c00;
+            color: #ff8c00;
+            padding: 5px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-edit-setup:hover { background: rgba(255,140,0,0.2); }
+
+        .header h1 {
+            font-size: 3em;
+            color: #ff8c00;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .total-money {
+            font-size: 2.5em;
+            color: #ffa500;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-top: 15px;
+        }
+
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .account-card {
+            background: transparent;
+            perspective: 1000px;
+            height: 350px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .account-card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: rgba(0, 31, 63, 0.8);
+            border: 3px solid #ff8c00;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-front {
+            transition: box-shadow 0.3s;
+        }
+
+        .card-front:hover {
+            box-shadow: 0 10px 30px rgba(255, 140, 0, 0.4);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            padding: 15px;
+        }
+
+        .card-back canvas {
+            max-height: 200px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff8c00;
+            color: #001f3f;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .growth-title {
+            color: #ff8c00;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .account-icon { font-size: 3em; margin-bottom: 10px; }
+        .account-name { font-size: 1.3em; color: #ff8c00; margin-bottom: 10px; font-weight: bold; }
+        .account-balance { font-size: 2em; color: #ffa500; font-weight: bold; }
+        .account-type { color: #ffa500; font-size: 0.9em; margin-top: 5px; }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .chart-container {
+            background: rgba(0, 31, 63, 0.8);
+            border: 3px solid #ff8c00;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            color: #ff8c00;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* College Savings Tube Styles */
+        .college-section {
+            background: rgba(0, 31, 63, 0.8);
+            border: 3px solid #ff8c00;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tube-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .tube-container {
+            flex-grow: 1;
+            height: 50px;
+            background: #001f3f;
+            border: 3px solid #ff8c00;
+            border-radius: 25px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .tube-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff8c00, #ffaa00);
+            width: 0%; 
+            border-radius: 20px;
+            transition: width 1.5s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .tube-marker {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff8c00;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .update-section {
+            background: rgba(0, 31, 63, 0.8);
+            border: 3px solid #ff8c00;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .update-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { color: #ff8c00; margin-bottom: 5px; font-weight: bold; }
+        
+        select, input {
+            padding: 10px;
+            border: 2px solid #ff8c00;
+            border-radius: 8px;
+            background: #001f3f;
+            color: #ff8c00;
+            font-size: 1em;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #ff8c00;
+            color: #001f3f;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+        }
+        button:hover { background: #ffa500; }
+
+        /* Millionaire Calculator */
+        .millionaire-section {
+            background: rgba(0, 31, 63, 0.8);
+            border: 3px solid #ff8c00;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .millionaire-params {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .millionaire-result {
+            font-size: 1.5em;
+            text-align: center;
+            color: #4ecdc4;
+            font-weight: bold;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        /* Action Buttons Section */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        .btn-download { background-color: #2ecc71; color: white; }
+        .btn-download:hover { background-color: #27ae60; }
+
+        .btn-reset { background-color: #e74c3c; color: white; }
+        .btn-reset:hover { background-color: #c0392b; }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .total-money { font-size: 1.8em; }
+            .update-form { grid-template-columns: 1fr; }
+            .accounts-grid { grid-template-columns: 1fr; }
+            .tube-wrapper { flex-direction: column; }
+            .action-buttons { flex-direction: column; }
+            .account-item-setup { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Setup Modal -->
+    <div id="setupModal">
+        <div class="setup-content">
+            <div class="logo-section" style="margin-bottom: 20px; box-shadow: none; border: none; padding: 0; background: transparent;">
+                <img src="new_banner.png" alt="Banner" style="border: 3px solid #ff8c00; border-radius: 15px; width: 100%;">
+            </div>
+            <h2>⚙️ Welcome! Let's Setup the Dashboard</h2>
+            <div class="setup-group">
+                <label for="setupName">Child's Name:</label>
+                <input type="text" id="setupName" placeholder="e.g. Ezra">
+            </div>
+            <div class="setup-group">
+                <label for="setupAge">Child's Age:</label>
+                <input type="number" id="setupAge" placeholder="e.g. 6">
+            </div>
+            <div class="setup-group">
+                <label for="setupCollegeGoal">College Savings Goal ($):</label>
+                <input type="number" id="setupCollegeGoal" value="28000">
+            </div>
+            
+            <h3 style="margin-top:20px; color:#001f3f;">Accounts</h3>
+            <div class="accounts-list-setup" id="setupAccountsList">
+                <!-- Dynamic account rows go here -->
+            </div>
+            
+            <div class="setup-actions">
+                <button class="btn-secondary" onclick="addSetupAccountRow()">➕ Add Account</button>
+                <button class="btn-primary" onclick="saveSetup()">🚀 Let's Go!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="container" id="dashboardContent">
+        
+        <div class="logo-section">
+            <img src="new_banner.png" alt="Taitt Fin - Your Wealth Snapshot" onerror="this.src='https://via.placeholder.com/800x200.png?text=Taitt+Fin+Banner'">
+        </div>
+
+        <div class="header">
+            <button class="btn-edit-setup" onclick="showSetup()" data-html2canvas-ignore="true">⚙️ Settings</button>
+            <h1>🌟 <span id="displayHeaderName">Name</span>'s Money Dashboard 🌟</h1>
+            <div>Age: <span id="displayHeaderAge">0</span> years old 🎂</div>
+            <div class="total-money">Total Money: $<span id="totalMoney">0.00</span></div>
+            <div style="margin-top: 10px; font-size: 1.2em;">You're doing AMAZING! 🚀</div>
+        </div>
+
+        <div class="accounts-grid" id="accountsGrid">
+            <!-- Cards rendered dynamically -->
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">🥧 Where Your Money Lives</div>
+                <canvas id="pieChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">📊 Total Growth Journey</div>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+
+        <div class="college-section" id="collegeSection">
+            <h3 style="color: #ff8c00; margin-bottom: 10px; font-size: 1.8em;">🎓 Saving for College 🎓</h3>
+            <p style="color: #ffa500; font-size: 1.1em;">Goal: Fill the tube to reach $<span id="displayCollegeGoal"></span>!</p>
+            
+            <div class="tube-wrapper">
+                <div class="tube-container">
+                    <div class="tube-fill" id="collegeTubeFill"></div>
+                    <div class="tube-marker">Goal: $<span id="displayCollegeGoalMarker"></span></div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; color: #ff8c00; font-weight: bold; padding: 0 10px;">
+                <span>$0</span>
+                <span>Current 529 Total: $<span id="current529Total">0</span></span>
+            </div>
+        </div>
+
+        <div class="update-section" data-html2canvas-ignore="true">
+            <h3 style="color: #ff8c00; margin-bottom: 20px; text-align: center; font-size: 1.8em;">
+                ✏️ Update Your Money
+            </h3>
+            <div class="update-form">
+                <div class="form-group">
+                    <label for="accountSelect">Pick an Account:</label>
+                    <select id="accountSelect">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newBalance">New Balance:</label>
+                    <input type="number" id="newBalance" step="0.01" placeholder="0.00">
+                </div>
+                <button onclick="updateBalance()">Update! 🎉</button>
+            </div>
+        </div>
+
+        <!-- Millionaire Section -->
+        <div class="millionaire-section">
+            <h3 class="chart-title">🏆 How Many Years to a Millionaire?</h3>
+            <p style="text-align:center; margin-bottom: 20px;">If <span id="milName">you</span> saved a fixed amount every year for <strong>10 years</strong> and then stopped, how much would you need to save per year to reach $1,000,000 by age <input type="number" id="targetRetirementAge" value="65" style="width:60px; padding:5px; height:auto;" onchange="calculateMillionaire()">? (Assuming 10% annual return)</p>
+            
+            <div class="millionaire-result" id="milResultText">
+                Save $<span id="milPmtAmount">0</span> per year for 10 years!
+            </div>
+
+            <div class="chart-container" style="background:transparent; border:none;">
+                <canvas id="millionaireChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+
+        <div class="action-buttons" data-html2canvas-ignore="true">
+            <button class="btn-download" onclick="downloadPDF()">📄 Download PDF</button>
+            <button class="btn-download" style="background:#3498db;" onclick="downloadCSV()">📊 Download CSV</button>
+            <button class="btn-reset" onclick="hardReset()">🚨 Wipe Data</button>
+        </div>
+    </div>
+
+    <script>
+        const ACCOUNT_TYPES = [
+            { type: 'Checking', icon: '🏦' },
+            { type: 'Savings', icon: '🐷' },
+            { type: 'CD', icon: '🔒' },
+            { type: 'Piggy Bank', icon: '🐖' },
+            { type: 'Cash', icon: '💵' },
+            { type: 'Brokerage', icon: '💼' },
+            { type: 'IRA', icon: '🌱' },
+            { type: '529', icon: '🎓' }
+        ];
+
+        // State object matching LocalStorage
+        let appState = {
+            name: '',
+            age: 6,
+            collegeGoal: 28000,
+            accounts: [], // { id, name, type, icon }
+            history: {} // { accountId: { dates: [], balances: [] } }
+        };
+
+        let charts = {
+            pie: null,
+            bar: null,
+            millionaire: null,
+            mini: {}
+        };
+
+        const STORAGE_KEY = 'kidsMoneyDashboardV2';
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                appState = JSON.parse(saved);
+                document.getElementById('setupModal').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                renderDashboard();
+            } else {
+                showSetup();
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        }
+
+        function showSetup() {
+            document.getElementById('setupModal').style.display = 'flex';
+            document.getElementById('dashboardContent').style.display = 'none';
+            
+            // Populate form if data exists
+            document.getElementById('setupName').value = appState.name || '';
+            document.getElementById('setupAge').value = appState.age || '';
+            document.getElementById('setupCollegeGoal').value = appState.collegeGoal || 28000;
+            
+            const list = document.getElementById('setupAccountsList');
+            list.innerHTML = '';
+            
+            if (appState.accounts.length > 0) {
+                appState.accounts.forEach(acc => {
+                    const latestBalance = getLatestBalance(acc.id);
+                    addSetupAccountRow(acc.id, acc.name, acc.type, latestBalance);
+                });
+            } else {
+                // Default starter accounts
+                addSetupAccountRow(generateId(), 'Checking', 'Checking', 0);
+                addSetupAccountRow(generateId(), 'Savings', 'Savings', 0);
+                addSetupAccountRow(generateId(), '529 Plan', '529', 0);
+            }
+        }
+
+        function generateId() {
+            return 'acc-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function getAccountIcon(type) {
+            const found = ACCOUNT_TYPES.find(a => a.type === type);
+            return found ? found.icon : '🏦';
+        }
+
+        function addSetupAccountRow(id = generateId(), name = '', type = 'Checking', balance = 0) {
+            const list = document.getElementById('setupAccountsList');
+            const row = document.createElement('div');
+            row.className = 'account-item-setup';
+            row.dataset.id = id;
+            
+            let optionsHtml = ACCOUNT_TYPES.map(a => `<option value="${a.type}" ${a.type === type ? 'selected' : ''}>${a.type} ${a.icon}</option>`).join('');
+            
+            row.innerHTML = `
+                <input type="text" class="setup-acc-name" placeholder="Account Name" value="${name}">
+                <select class="setup-acc-type">${optionsHtml}</select>
+                <input type="number" class="setup-acc-bal" placeholder="Balance" value="${balance}" step="0.01">
+                <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
+            `;
+            list.appendChild(row);
+        }
+
+        function saveSetup() {
+            const name = document.getElementById('setupName').value.trim();
+            const age = parseInt(document.getElementById('setupAge').value) || 0;
+            const goal = parseFloat(document.getElementById('setupCollegeGoal').value) || 28000;
+            
+            if (!name) { alert("Please enter a name."); return; }
+            
+            appState.name = name;
+            appState.age = age;
+            appState.collegeGoal = goal;
+            
+            const rows = document.querySelectorAll('.account-item-setup');
+            const newAccounts = [];
+            const newHistory = {};
+            
+            const today = new Date().toISOString().split('T')[0];
+
+            rows.forEach(row => {
+                const id = row.dataset.id;
+                const accName = row.querySelector('.setup-acc-name').value || 'My Account';
+                const accType = row.querySelector('.setup-acc-type').value;
+                const accBal = parseFloat(row.querySelector('.setup-acc-bal').value) || 0;
+                
+                newAccounts.push({ id, name: accName, type: accType, icon: getAccountIcon(accType) });
+                
+                // Preserve history if it exists, otherwise init
+                if (appState.history[id]) {
+                    newHistory[id] = appState.history[id];
+                    // If balance changed in setup, record it
+                    if (getLatestBalance(id, appState.history[id]) !== accBal) {
+                        newHistory[id].dates.push(today);
+                        newHistory[id].balances.push(accBal);
+                    }
+                } else {
+                    newHistory[id] = { dates: [today], balances: [accBal] };
+                }
+            });
+            
+            appState.accounts = newAccounts;
+            appState.history = newHistory;
+            
+            saveToStorage();
+            
+            document.getElementById('setupModal').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+            
+            renderDashboard();
+        }
+
+        function getLatestBalance(accountId, historyObj = appState.history[accountId]) {
+            if (!historyObj || historyObj.balances.length === 0) return 0;
+            return historyObj.balances[historyObj.balances.length - 1];
+        }
+
+        function getTotalBalance() {
+            return appState.accounts.reduce((sum, acc) => sum + getLatestBalance(acc.id), 0);
+        }
+
+        function renderDashboard() {
+            // Header
+            document.getElementById('displayHeaderName').textContent = appState.name;
+            document.getElementById('milName').textContent = appState.name;
+            document.getElementById('displayHeaderAge').textContent = appState.age;
+            document.getElementById('totalMoney').textContent = getTotalBalance().toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // College Section
+            const goalStr = appState.collegeGoal.toLocaleString();
+            document.getElementById('displayCollegeGoal').textContent = goalStr;
+            document.getElementById('displayCollegeGoalMarker').textContent = goalStr;
+            
+            // Render Cards
+            const grid = document.getElementById('accountsGrid');
+            grid.innerHTML = '';
+            const select = document.getElementById('accountSelect');
+            select.innerHTML = '';
+            
+            let total529 = 0;
+
+            appState.accounts.forEach(acc => {
+                const bal = getLatestBalance(acc.id);
+                if (acc.type === '529') total529 += bal;
+                
+                // Update dropdown
+                select.innerHTML += `<option value="${acc.id}">${acc.name} ${acc.icon}</option>`;
+                
+                // Card HTML
+                const card = document.createElement('div');
+                card.className = 'account-card';
+                card.id = `card-${acc.id}`;
+                card.onclick = () => flipCard(acc.id);
+                
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="account-icon">${acc.icon}</div>
+                            <div class="account-name">${acc.name}</div>
+                            <div class="account-balance">$<span>${bal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</span></div>
+                            <div class="account-type">${acc.type}</div>
+                            <div style="margin-top: 15px; color: #4ecdc4; font-size: 0.9em;">Click to see growth! 📈</div>
+                        </div>
+                        <div class="card-back">
+                            <button class="back-button" onclick="event.stopPropagation(); flipCard('${acc.id}')">✕</button>
+                            <div class="growth-title">${acc.name} Growth</div>
+                            <canvas id="chart-${acc.id}"></canvas>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Update College Tube
+            document.getElementById('current529Total').textContent = total529.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            const tubeFill = document.getElementById('collegeTubeFill');
+            let pct = (total529 / appState.collegeGoal) * 100;
+            if (pct > 100) pct = 100;
+            setTimeout(() => { tubeFill.style.width = pct + '%'; }, 500);
+
+            renderMainCharts();
+            calculateMillionaire();
+        }
+
+        function flipCard(accId) {
+            const card = document.getElementById(`card-${accId}`);
+            const wasFlipped = card.classList.contains('flipped');
+            
+            document.querySelectorAll('.account-card').forEach(c => c.classList.remove('flipped'));
+            
+            if (!wasFlipped) {
+                card.classList.add('flipped');
+                setTimeout(() => initMiniChart(accId), 400);
+            }
+        }
+
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7b731', '#a55eea', '#96ceb4', '#e84393', '#fdcb6e'];
+
+        function initMiniChart(accId) {
+            const ctxId = `chart-${accId}`;
+            const canvas = document.getElementById(ctxId);
+            if (!canvas) return;
+            
+            if (charts.mini[accId]) charts.mini[accId].destroy();
+            
+            const historyObj = appState.history[accId];
+            const accIndex = appState.accounts.findIndex(a => a.id === accId);
+            const chartColor = colors[accIndex % colors.length];
+
+            charts.mini[accId] = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: historyObj.dates,
+                    datasets: [{
+                        label: 'Balance',
+                        data: historyObj.balances,
+                        borderColor: chartColor,
+                        backgroundColor: chartColor + '33',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { 
+                            display: true,
+                            ticks: { color: '#ff8c00', font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderMainCharts() {
+            const labels = appState.accounts.map(a => a.name);
+            const data = appState.accounts.map(a => getLatestBalance(a.id));
+            const bgColors = appState.accounts.map((a, i) => colors[i % colors.length]);
+
+            if (charts.pie) charts.pie.destroy();
+            charts.pie = new Chart(document.getElementById('pieChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderColor: '#001f3f',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#ff8c00', font: { family: 'Comic Sans MS' } } } }
+                }
+            });
+
+            if (charts.bar) charts.bar.destroy();
+            charts.bar = new Chart(document.getElementById('barChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Current Balance',
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderColor: '#ff8c00',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { color: '#ff8c00' }, grid: { color: '#ff8c0022' } },
+                        x: { ticks: { color: '#ff8c00', font: { family: 'Comic Sans MS' } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateBalance() {
+            const accountId = document.getElementById('accountSelect').value;
+            const newBalance = parseFloat(document.getElementById('newBalance').value);
+
+            if (isNaN(newBalance) || newBalance < 0) {
+                alert('Please enter a valid amount! 😊');
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const history = appState.history[accountId];
+            
+            // If updating on the same day, replace it, otherwise push
+            if (history.dates[history.dates.length - 1] === today) {
+                history.balances[history.balances.length - 1] = newBalance;
+            } else {
+                history.dates.push(today);
+                history.balances.push(newBalance);
+            }
+
+            saveToStorage();
+            renderDashboard();
+            document.getElementById('newBalance').value = '';
+        }
+
+        function calculateMillionaire() {
+            const age = appState.age || 0;
+            let targetAge = parseInt(document.getElementById('targetRetirementAge').value) || 65;
+            if (targetAge <= age) targetAge = age + 10; // Failsafe
+            
+            const goal = 1000000;
+            const r = 0.10; // 10%
+            
+            // They save for exactly 10 years (or less if targetAge is very close)
+            let yearsToSave = 10;
+            if (targetAge - age < 10) yearsToSave = targetAge - age;
+            
+            const growthYears = targetAge - age - yearsToSave;
+            
+            // Formula: goal = PMT * ( ((1+r)^yearsToSave - 1) / r ) * (1+r)^growthYears
+            const fvAnnuityFactor = (Math.pow(1 + r, yearsToSave) - 1) / r;
+            const compoundFactor = Math.pow(1 + r, growthYears);
+            
+            const pmt = goal / (fvAnnuityFactor * compoundFactor);
+            
+            document.getElementById('milPmtAmount').textContent = pmt.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            
+            // Generate Chart Data
+            const labels = [];
+            const balances = [];
+            let currentBal = 0;
+            
+            for (let i = 0; i <= (targetAge - age); i++) {
+                labels.push(`Age ${age + i}`);
+                balances.push(currentBal);
+                
+                if (i < yearsToSave) {
+                    currentBal = (currentBal + pmt) * (1 + r);
+                } else {
+                    currentBal = currentBal * (1 + r);
+                }
+            }
+
+            if (charts.millionaire) charts.millionaire.destroy();
+            charts.millionaire = new Chart(document.getElementById('millionaireChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Projected Wealth',
+                        data: balances,
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toLocaleString(undefined, {maximumFractionDigits:0});
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { ticks: { color: '#ff8c00', callback: value => '$' + (value/1000) + 'k' }, grid: { color: '#ff8c0022' } },
+                        x: { ticks: { color: '#ff8c00', maxTicksLimit: 10 }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('dashboardContent');
+            const opt = {
+                margin: 0.5,
+                filename: `${appState.name || 'kids'}_money_dashboard.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function downloadCSV() {
+            let csv = "Account Name,Type,Date,Balance\n";
+            appState.accounts.forEach(acc => {
+                const history = appState.history[acc.id];
+                for (let i = 0; i < history.dates.length; i++) {
+                    csv += `"${acc.name}","${acc.type}",${history.dates[i]},${history.balances[i]}\n`;
+                }
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${appState.name || 'kids'}_balances.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function hardReset() {
+            if(confirm("🚨 WARNING! This will wipe all data and history. Are you sure?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        window.addEventListener('load', loadState);
+
+    </script>
+</body>
+</html>
