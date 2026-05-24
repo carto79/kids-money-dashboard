@@ -582,13 +582,13 @@
 
         <div class="action-buttons" data-html2canvas-ignore="true">
             <button class="btn-download" style="background:#f39c12;" onclick="window.location.href='mailto:taittfin@gmail.com'">✉️ Contact Us</button>
-            <button class="btn-download" onclick="downloadWord()">📄 Download Word Doc</button>
+            <button class="btn-download" onclick="downloadText()">📄 Download Text File</button>
             <button class="btn-download" style="background:#3498db;" onclick="downloadCSV()">📊 Download CSV</button>
             <button class="btn-reset" onclick="hardReset()">🚨 Wipe Data</button>
         </div>
 
         <footer style="text-align: center; color: #ff8c00; margin-top: 50px; font-size: 0.9em; padding-bottom: 20px;" data-html2canvas-ignore="true">
-            <p>Built for The Ezra Show by Taitt Fin.</p>
+            <p>Built for <a href="https://www.youtube.com/@the_ezra_show" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">The Ezra Show</a> by <a href="https://taittfin.com/" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">Taitt Fin</a>.</p>
             <p><strong>Privacy Promise:</strong> All data is stored locally on your device. We do not collect, transmit, or store any personal information.</p>
         </footer>
     </div>
@@ -995,49 +995,34 @@
             });
         }
 
-        function downloadWord() {
-            const btn = document.querySelector('.btn-download');
-            const originalText = btn.textContent;
-            btn.textContent = '⏳ Generating Word Doc...';
-
-            // Clone the dashboard content
-            const content = document.getElementById('dashboardContent');
-            const clone = content.cloneNode(true);
+        function downloadText() {
+            let txt = `🌟 ${appState.name}'s Money Dashboard 🌟\n`;
+            txt += `Age: ${appState.age} years old\n`;
+            txt += `Total Money: $${getTotalBalance().toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n\n`;
+            txt += `--- Accounts ---\n`;
             
-            // Replace canvases with base64 images so they render in Word
-            const originalCanvases = content.querySelectorAll('canvas');
-            const clonedCanvases = clone.querySelectorAll('canvas');
-            
-            for (let i = 0; i < originalCanvases.length; i++) {
-                if (originalCanvases[i].width > 0) { // Ensure canvas is drawn
-                    const img = document.createElement('img');
-                    img.src = originalCanvases[i].toDataURL('image/png');
-                    img.style.maxWidth = '100%';
-                    clonedCanvases[i].parentNode.replaceChild(img, clonedCanvases[i]);
-                }
-            }
-            
-            // Remove buttons from export
-            const buttons = clone.querySelector('.action-buttons');
-            if(buttons) buttons.remove();
-
-            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Money Dashboard</title></head><body>";
-            const footer = "</body></html>";
-            const sourceHTML = header + clone.innerHTML + footer;
-            
-            const blob = new Blob(['\\ufeff', sourceHTML], {
-                type: 'application/msword'
+            appState.accounts.forEach(acc => {
+                const bal = getLatestBalance(acc.id);
+                txt += `${acc.name} (${acc.type}): $${bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
             });
             
+            txt += `\n--- History ---\n`;
+            appState.accounts.forEach(acc => {
+                txt += `\n${acc.name}:\n`;
+                const history = appState.history[acc.id];
+                for (let i = 0; i < history.dates.length; i++) {
+                    txt += `  ${history.dates[i]}: $${history.balances[i].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+                }
+            });
+
+            const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${appState.name || 'kids'}_money_dashboard.doc`;
+            link.download = `${appState.name || 'kids'}_money_dashboard.txt`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            btn.textContent = originalText;
         }
 
         function downloadCSV() {
