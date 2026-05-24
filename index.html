@@ -502,14 +502,6 @@
                 <label for="setupAge">Child's Age:</label>
                 <input type="number" id="setupAge" placeholder="e.g. 6">
             </div>
-            <div class="setup-group">
-                <label for="setupCollegeGoal">College Savings Goal ($):</label>
-                <input type="number" id="setupCollegeGoal" value="28000">
-            </div>
-            <div class="setup-group">
-                <label for="setupCollegeCurrent">Current Savings for College ($):</label>
-                <input type="number" id="setupCollegeCurrent" value="0">
-            </div>
             
             <h3 style="margin-top:20px; color:#001f3f;">Accounts</h3>
             <div class="accounts-list-setup" id="setupAccountsList">
@@ -555,23 +547,6 @@
             </div>
         </div>
 
-        <div class="college-section" id="collegeSection">
-            <h3 style="color: #ff8c00; margin-bottom: 10px; font-size: 1.8em;">🎓 Saving for College 🎓</h3>
-            <p style="color: #ffa500; font-size: 1.1em;">Goal: Fill the tube to reach $<span id="displayCollegeGoal"></span>!</p>
-            
-            <div class="tube-wrapper">
-                <div class="tube-container">
-                    <div class="tube-fill" id="collegeTubeFill"></div>
-                    <div class="tube-marker">Goal: $<span id="displayCollegeGoalMarker"></span></div>
-                </div>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; color: #ff8c00; font-weight: bold; padding: 0 10px;">
-                <span>$0</span>
-                <span>Current 529 Total: $<span id="current529Total">0</span></span>
-            </div>
-        </div>
-
         <div class="update-section" data-html2canvas-ignore="true">
             <h3 style="color: #ff8c00; margin-bottom: 20px; text-align: center; font-size: 1.8em;">
                 ✏️ Update Your Money
@@ -606,6 +581,7 @@
         </div>
 
         <div class="action-buttons" data-html2canvas-ignore="true">
+            <button class="btn-download" style="background:#f39c12;" onclick="window.location.href='mailto:taittfin@gmail.com'">✉️ Contact Us</button>
             <button class="btn-download" onclick="downloadWord()">📄 Download Word Doc</button>
             <button class="btn-download" style="background:#3498db;" onclick="downloadCSV()">📊 Download CSV</button>
             <button class="btn-reset" onclick="hardReset()">🚨 Wipe Data</button>
@@ -629,12 +605,9 @@
             { type: '529', icon: '🎓' }
         ];
 
-        // State object matching LocalStorage
         let appState = {
             name: '',
             age: 6,
-            collegeGoal: 28000,
-            collegeCurrent: 0,
             accounts: [], // { id, name, type, icon }
             history: {} // { accountId: { dates: [], balances: [] } }
         };
@@ -671,8 +644,6 @@
             // Populate form if data exists
             document.getElementById('setupName').value = appState.name || '';
             document.getElementById('setupAge').value = appState.age || '';
-            document.getElementById('setupCollegeGoal').value = appState.collegeGoal || 28000;
-            document.getElementById('setupCollegeCurrent').value = appState.collegeCurrent || 0;
             
             const list = document.getElementById('setupAccountsList');
             list.innerHTML = '';
@@ -719,15 +690,11 @@
         function saveSetup() {
             const name = document.getElementById('setupName').value.trim();
             const age = parseInt(document.getElementById('setupAge').value) || 0;
-            const goal = parseFloat(document.getElementById('setupCollegeGoal').value) || 28000;
-            const currentCollege = parseFloat(document.getElementById('setupCollegeCurrent').value) || 0;
             
             if (!name) { alert("Please enter a name."); return; }
             
             appState.name = name;
             appState.age = age;
-            appState.collegeGoal = goal;
-            appState.collegeCurrent = currentCollege;
             
             const rows = document.querySelectorAll('.account-item-setup');
             const newAccounts = [];
@@ -783,16 +750,11 @@
             document.getElementById('displayHeaderAge').textContent = appState.age;
             document.getElementById('totalMoney').textContent = getTotalBalance().toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
-            // College Section
-            const goalStr = appState.collegeGoal.toLocaleString();
-            document.getElementById('displayCollegeGoal').textContent = goalStr;
-            document.getElementById('displayCollegeGoalMarker').textContent = goalStr;
-            
             // Render Cards
             const grid = document.getElementById('accountsGrid');
             grid.innerHTML = '';
             const select = document.getElementById('accountSelect');
-            select.innerHTML = '<option value="collegeTube">🎓 College Savings Tube</option>';
+            select.innerHTML = '';
             
             appState.accounts.forEach(acc => {
                 const bal = getLatestBalance(acc.id);
@@ -828,14 +790,6 @@
                 `;
                 grid.appendChild(card);
             });
-
-            // Update College Tube
-            const currentCollege = appState.collegeCurrent || 0;
-            document.getElementById('current529Total').textContent = currentCollege.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-            const tubeFill = document.getElementById('collegeTubeFill');
-            let pct = (currentCollege / appState.collegeGoal) * 100;
-            if (pct > 100) pct = 100;
-            setTimeout(() => { tubeFill.style.width = pct + '%'; }, 500);
 
             renderMainCharts();
             calculateMillionaire();
@@ -949,15 +903,6 @@
 
             if (isNaN(newBalance) || newBalance < 0) {
                 alert('Please enter a valid amount! 😊');
-                return;
-            }
-
-            if (accountId === 'collegeTube') {
-                appState.collegeCurrent = newBalance;
-                saveToStorage();
-                renderDashboard();
-                document.getElementById('newBalance').value = '';
-                alert('🎉 College Savings updated!');
                 return;
             }
 
