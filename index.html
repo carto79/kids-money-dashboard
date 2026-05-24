@@ -473,7 +473,7 @@
     <div id="setupModal">
         <div class="setup-content">
             <div class="logo-section" style="margin-bottom: 20px; box-shadow: none; border: none; padding: 0; background: transparent;">
-                <img src="new_banner.png" alt="Banner" style="border: 3px solid #ff8c00; border-radius: 15px; width: 100%;">
+                <img src="ezra_show_banner.png" alt="Banner" style="border: 3px solid #ff8c00; border-radius: 15px; width: 100%;">
             </div>
             <h2>⚙️ Welcome! Let's Setup the Dashboard</h2>
             <div class="setup-group">
@@ -1008,15 +1008,26 @@
         }
 
         function downloadPDF() {
+            const btn = document.querySelector('.btn-download');
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Generating PDF...';
+
             const element = document.getElementById('dashboardContent');
             const opt = {
-                margin: 0.5,
+                margin: 0.2,
                 filename: `${appState.name || 'kids'}_money_dashboard.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(element).save();
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.textContent = originalText;
+            }).catch(err => {
+                console.error("PDF Error: ", err);
+                alert("There was an error generating the PDF.");
+                btn.textContent = originalText;
+            });
         }
 
         function downloadCSV() {
