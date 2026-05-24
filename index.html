@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kids Money Dashboard 💰</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -472,9 +471,6 @@
     <!-- Setup Modal -->
     <div id="setupModal">
         <div class="setup-content">
-            <div class="logo-section" style="margin-bottom: 20px; box-shadow: none; border: none; padding: 0; background: transparent;">
-                <img src="ezra_show_banner.png" alt="Banner" style="border: 3px solid #ff8c00; border-radius: 15px; width: 100%;">
-            </div>
             <h2>⚙️ Welcome! Let's Setup the Dashboard</h2>
             <div class="setup-group">
                 <label for="setupName">Child's Name:</label>
@@ -583,7 +579,7 @@
         </div>
 
         <div class="action-buttons" data-html2canvas-ignore="true">
-            <button class="btn-download" onclick="downloadPDF()">📄 Download PDF</button>
+            <button class="btn-download" onclick="downloadWord()">📄 Download Word Doc</button>
             <button class="btn-download" style="background:#3498db;" onclick="downloadCSV()">📊 Download CSV</button>
             <button class="btn-reset" onclick="hardReset()">🚨 Wipe Data</button>
         </div>
@@ -1007,27 +1003,49 @@
             });
         }
 
-        function downloadPDF() {
+        function downloadWord() {
             const btn = document.querySelector('.btn-download');
             const originalText = btn.textContent;
-            btn.textContent = '⏳ Generating PDF...';
+            btn.textContent = '⏳ Generating Word Doc...';
 
-            const element = document.getElementById('dashboardContent');
-            const opt = {
-                margin: 0.2,
-                filename: `${appState.name || 'kids'}_money_dashboard.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+            // Clone the dashboard content
+            const content = document.getElementById('dashboardContent');
+            const clone = content.cloneNode(true);
             
-            html2pdf().set(opt).from(element).save().then(() => {
-                btn.textContent = originalText;
-            }).catch(err => {
-                console.error("PDF Error: ", err);
-                alert("There was an error generating the PDF.");
-                btn.textContent = originalText;
+            // Replace canvases with base64 images so they render in Word
+            const originalCanvases = content.querySelectorAll('canvas');
+            const clonedCanvases = clone.querySelectorAll('canvas');
+            
+            for (let i = 0; i < originalCanvases.length; i++) {
+                if (originalCanvases[i].width > 0) { // Ensure canvas is drawn
+                    const img = document.createElement('img');
+                    img.src = originalCanvases[i].toDataURL('image/png');
+                    img.style.maxWidth = '100%';
+                    clonedCanvases[i].parentNode.replaceChild(img, clonedCanvases[i]);
+                }
+            }
+            
+            // Remove buttons from export
+            const buttons = clone.querySelector('.action-buttons');
+            if(buttons) buttons.remove();
+
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Money Dashboard</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + clone.innerHTML + footer;
+            
+            const blob = new Blob(['\\ufeff', sourceHTML], {
+                type: 'application/msword'
             });
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${appState.name || 'kids'}_money_dashboard.doc`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            btn.textContent = originalText;
         }
 
         function downloadCSV() {
