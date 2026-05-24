@@ -4,6 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kids Money Dashboard 💰</title>
+    <meta name="description" content="A kid-friendly financial dashboard to track allowances, 529s, and savings goals. Build wealth habits early.">
+    <link rel="canonical" href="https://carto79.github.io/kids-money-dashboard/">
+    <meta property="og:title" content="Kids Money Dashboard | Taitt Fin">
+    <meta property="og:description" content="A kid-friendly financial dashboard to track allowances, 529s, and savings goals.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://carto79.github.io/kids-money-dashboard/">
+    <meta property="og:image" content="https://carto79.github.io/kids-money-dashboard/new_banner.png">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Kids Money Dashboard",
+      "url": "https://carto79.github.io/kids-money-dashboard/",
+      "description": "A kid-friendly financial dashboard to track allowances, 529s, and savings goals.",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Any",
+      "creator": {
+        "@type": "Organization",
+        "name": "Taitt Fin"
+      }
+    }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -212,7 +234,7 @@
 
         .accounts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -276,10 +298,10 @@
             color: #001f3f;
             border: none;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 44px;
+            height: 44px;
             cursor: pointer;
-            font-size: 1.2em;
+            font-size: 1.5em;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -588,6 +610,11 @@
             <button class="btn-download" style="background:#3498db;" onclick="downloadCSV()">📊 Download CSV</button>
             <button class="btn-reset" onclick="hardReset()">🚨 Wipe Data</button>
         </div>
+
+        <footer style="text-align: center; color: #ff8c00; margin-top: 50px; font-size: 0.9em; padding-bottom: 20px;" data-html2canvas-ignore="true">
+            <p>Built for The Ezra Show by Taitt Fin.</p>
+            <p><strong>Privacy Promise:</strong> All data is stored locally on your device. We do not collect, transmit, or store any personal information.</p>
+        </footer>
     </div>
 
     <script>
@@ -777,7 +804,11 @@
                 const card = document.createElement('div');
                 card.className = 'account-card';
                 card.id = `card-${acc.id}`;
+                card.tabIndex = 0;
+                card.role = 'button';
+                card.ariaLabel = `View growth for ${acc.name}`;
                 card.onclick = () => flipCard(acc.id);
+                card.onkeydown = (e) => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flipCard(acc.id); } };
                 
                 card.innerHTML = `
                     <div class="card-inner">
