@@ -569,7 +569,7 @@
         <!-- Millionaire Section -->
         <div class="millionaire-section">
             <h3 class="chart-title">🏆 How Many Years to a Millionaire?</h3>
-            <p style="text-align:center; margin-bottom: 20px;">If <span id="milName">you</span> saved a fixed amount every year for <strong>10 years</strong> and then stopped, how much would you need to save per year to reach $1,000,000 by age <input type="number" id="targetRetirementAge" value="65" style="width:60px; padding:5px; height:auto;" onchange="calculateMillionaire()">? (Assuming 10% annual return)</p>
+            <p style="text-align:center; margin-bottom: 20px;">If <span id="milName">you</span> saved a fixed amount every year for <strong>10 years</strong> and then stopped, how much would you need to save per year to reach $1,000,000 by age <input type="number" id="targetRetirementAge" value="65" style="width:60px; padding:5px; height:auto;" onchange="calculateMillionaire()">? (Assuming <input type="number" id="targetInterestRate" value="10" style="width:60px; padding:5px; height:auto;" onchange="calculateMillionaire()">% annual return)</p>
             
             <div class="millionaire-result" id="milResultText">
                 Save $<span id="milPmtAmount">0</span> per year for 10 years!
@@ -928,7 +928,8 @@
             if (targetAge <= age) targetAge = age + 10; // Failsafe
             
             const goal = 1000000;
-            const r = 0.10; // 10%
+            const rateInput = parseFloat(document.getElementById('targetInterestRate').value);
+            const r = (isNaN(rateInput) || rateInput <= 0) ? 0.10 : (rateInput / 100);
             
             // They save for exactly 10 years (or less if targetAge is very close)
             let yearsToSave = 10;
