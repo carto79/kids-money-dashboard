@@ -569,7 +569,7 @@
         <!-- Millionaire Section -->
         <div class="millionaire-section">
             <h3 class="chart-title">🏆 How Many Years to a Millionaire?</h3>
-            <p style="text-align:center; margin-bottom: 20px;">If <span id="milName">you</span> saved a fixed amount every year for <strong>10 years</strong> and then stopped, how much would you need to save per year to reach $1,000,000 by age <input type="number" id="targetRetirementAge" value="65" style="width:60px; padding:5px; height:auto;" onchange="calculateMillionaire()">? (Assuming <input type="number" id="targetInterestRate" value="10" style="width:60px; padding:5px; height:auto;" onchange="calculateMillionaire()">% annual return)</p>
+            <p style="text-align:center; margin-bottom: 20px;">If <span id="milName">you</span> saved a fixed amount every year for <strong>10 years</strong> and then stopped, how much would you [...]
             
             <div class="millionaire-result" id="milResultText">
                 Save $<span id="milPmtAmount">0</span> per year for 10 years!
@@ -588,7 +588,7 @@
         </div>
 
         <footer style="text-align: center; color: #ff8c00; margin-top: 50px; font-size: 0.9em; padding-bottom: 20px;" data-html2canvas-ignore="true">
-            <p>Built for <a href="https://www.youtube.com/@the_ezra_show" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">The Ezra Show</a> by <a href="https://taittfin.com/" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">Taitt Fin</a>.</p>
+            <p>Built for <a href="https://www.youtube.com/@the_ezra_show" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">The Ezra Show</a> by <a href="http[...]
             <p><strong>Privacy Promise:</strong> All data is stored locally on your device. We do not collect, transmit, or store any personal information.</p>
         </footer>
     </div>
@@ -602,7 +602,8 @@
             { type: 'Cash', icon: '💵' },
             { type: 'Brokerage', icon: '💼' },
             { type: 'IRA', icon: '🌱' },
-            { type: '529', icon: '🎓' }
+            { type: '529', icon: '🎓' },
+            { type: 'Trump Account', icon: '🅣' }
         ];
 
         let appState = {
@@ -658,6 +659,7 @@
                 addSetupAccountRow(generateId(), 'Checking', 'Checking', 0);
                 addSetupAccountRow(generateId(), 'Savings', 'Savings', 0);
                 addSetupAccountRow(generateId(), '529 Plan', '529', 0);
+                addSetupAccountRow(generateId(), 'Trump Account', 'Trump Account', 0);
             }
         }
 
@@ -998,63 +1000,3 @@
 
         function downloadText() {
             let txt = `🌟 ${appState.name}'s Money Dashboard 🌟\n`;
-            txt += `Age: ${appState.age} years old\n`;
-            txt += `Total Money: $${getTotalBalance().toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n\n`;
-            txt += `--- Accounts ---\n`;
-            
-            appState.accounts.forEach(acc => {
-                const bal = getLatestBalance(acc.id);
-                txt += `${acc.name} (${acc.type}): $${bal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-            });
-            
-            txt += `\n--- History ---\n`;
-            appState.accounts.forEach(acc => {
-                txt += `\n${acc.name}:\n`;
-                const history = appState.history[acc.id];
-                for (let i = 0; i < history.dates.length; i++) {
-                    txt += `  ${history.dates[i]}: $${history.balances[i].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-                }
-            });
-
-            const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${appState.name || 'kids'}_money_dashboard.txt`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function downloadCSV() {
-            let csv = "Account Name,Type,Date,Balance\n";
-            appState.accounts.forEach(acc => {
-                const history = appState.history[acc.id];
-                for (let i = 0; i < history.dates.length; i++) {
-                    csv += `"${acc.name}","${acc.type}",${history.dates[i]},${history.balances[i]}\n`;
-                }
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `${appState.name || 'kids'}_balances.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function hardReset() {
-            if(confirm("🚨 WARNING! This will wipe all data and history. Are you sure?")) {
-                localStorage.removeItem(STORAGE_KEY);
-                location.reload();
-            }
-        }
-
-        window.addEventListener('load', loadState);
-
-    </script>
-</body>
-</html>
