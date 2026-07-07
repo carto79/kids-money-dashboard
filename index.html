@@ -341,57 +341,6 @@
             text-align: center;
         }
 
-        /* College Savings Tube Styles */
-        .college-section {
-            background: rgba(0, 31, 63, 0.8);
-            border: 3px solid #ff8c00;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .tube-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .tube-container {
-            flex-grow: 1;
-            height: 50px;
-            background: #001f3f;
-            border: 3px solid #ff8c00;
-            border-radius: 25px;
-            margin: 20px 0;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .tube-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff8c00, #ffaa00);
-            width: 0%; 
-            border-radius: 20px;
-            transition: width 1.5s ease-out;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .tube-marker {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #ff8c00;
-            font-weight: bold;
-            z-index: 2;
-        }
-
         .update-section {
             background: rgba(0, 31, 63, 0.8);
             border: 3px solid #ff8c00;
@@ -482,9 +431,9 @@
             .total-money { font-size: 1.8em; }
             .update-form { grid-template-columns: 1fr; }
             .accounts-grid { grid-template-columns: 1fr; }
-            .tube-wrapper { flex-direction: column; }
             .action-buttons { flex-direction: column; }
             .account-item-setup { flex-direction: column; align-items: stretch; }
+            .millionaire-params { flex-direction: column; }
         }
     </style>
 </head>
@@ -569,7 +518,19 @@
         <!-- Millionaire Section -->
         <div class="millionaire-section">
             <h3 class="chart-title">🏆 How Many Years to a Millionaire?</h3>
-            <p style="text-align:center; margin-bottom: 20px;">If <span id="milName">you</span> saved a fixed amount every year for <strong>10 years</strong> and then stopped, how much would you [...]
+            <p style="text-align:center; margin-bottom: 20px;">If <span id="milName">you</span> saved a fixed amount every year for <strong>10 years</strong> and then stopped, how much would you have at retirement?</p>
+            
+            <div class="millionaire-params">
+                <div class="form-group" style="min-width: 150px;">
+                    <label for="targetRetirementAge">Retirement Age:</label>
+                    <input type="number" id="targetRetirementAge" value="65" min="18" max="100">
+                </div>
+                <div class="form-group" style="min-width: 150px;">
+                    <label for="targetInterestRate">Interest Rate (%):</label>
+                    <input type="number" id="targetInterestRate" value="10" min="0" max="20" step="0.5">
+                </div>
+                <button onclick="calculateMillionaire()">Calculate!</button>
+            </div>
             
             <div class="millionaire-result" id="milResultText">
                 Save $<span id="milPmtAmount">0</span> per year for 10 years!
@@ -588,7 +549,7 @@
         </div>
 
         <footer style="text-align: center; color: #ff8c00; margin-top: 50px; font-size: 0.9em; padding-bottom: 20px;" data-html2canvas-ignore="true">
-            <p>Built for <a href="https://www.youtube.com/@the_ezra_show" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">The Ezra Show</a> by <a href="http[...]
+            <p>Built for <a href="https://www.youtube.com/@the_ezra_show" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">The Ezra Show</a> by <a href="https://carto79.github.io" target="_blank" rel="noopener noreferrer" style="color:#ff8c00; text-decoration:underline;">Carto79</a></p>
             <p><strong>Privacy Promise:</strong> All data is stored locally on your device. We do not collect, transmit, or store any personal information.</p>
         </footer>
     </div>
@@ -602,15 +563,14 @@
             { type: 'Cash', icon: '💵' },
             { type: 'Brokerage', icon: '💼' },
             { type: 'IRA', icon: '🌱' },
-            { type: '529', icon: '🎓' },
-            { type: 'Trump Account', icon: '🅣' }
+            { type: '529', icon: '🎓' }
         ];
 
         let appState = {
             name: '',
             age: 6,
-            accounts: [], // { id, name, type, icon }
-            history: {} // { accountId: { dates: [], balances: [] } }
+            accounts: [],
+            history: {}
         };
 
         let charts = {
@@ -642,7 +602,6 @@
             document.getElementById('setupModal').style.display = 'flex';
             document.getElementById('dashboardContent').style.display = 'none';
             
-            // Populate form if data exists
             document.getElementById('setupName').value = appState.name || '';
             document.getElementById('setupAge').value = appState.age || '';
             
@@ -655,11 +614,9 @@
                     addSetupAccountRow(acc.id, acc.name, acc.type, latestBalance);
                 });
             } else {
-                // Default starter accounts
                 addSetupAccountRow(generateId(), 'Checking', 'Checking', 0);
                 addSetupAccountRow(generateId(), 'Savings', 'Savings', 0);
                 addSetupAccountRow(generateId(), '529 Plan', '529', 0);
-                addSetupAccountRow(generateId(), 'Trump Account', 'Trump Account', 0);
             }
         }
 
@@ -712,10 +669,8 @@
                 
                 newAccounts.push({ id, name: accName, type: accType, icon: getAccountIcon(accType) });
                 
-                // Preserve history if it exists, otherwise init
                 if (appState.history[id]) {
                     newHistory[id] = appState.history[id];
-                    // If balance changed in setup, record it
                     if (getLatestBalance(id, appState.history[id]) !== accBal) {
                         newHistory[id].dates.push(today);
                         newHistory[id].balances.push(accBal);
@@ -746,13 +701,11 @@
         }
 
         function renderDashboard() {
-            // Header
             document.getElementById('displayHeaderName').textContent = appState.name;
             document.getElementById('milName').textContent = appState.name;
             document.getElementById('displayHeaderAge').textContent = appState.age;
             document.getElementById('totalMoney').textContent = getTotalBalance().toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
-            // Render Cards
             const grid = document.getElementById('accountsGrid');
             grid.innerHTML = '';
             const select = document.getElementById('accountSelect');
@@ -761,10 +714,8 @@
             appState.accounts.forEach(acc => {
                 const bal = getLatestBalance(acc.id);
                 
-                // Update dropdown
                 select.innerHTML += `<option value="${acc.id}">${acc.name} ${acc.icon}</option>`;
                 
-                // Card HTML
                 const card = document.createElement('div');
                 card.className = 'account-card';
                 card.id = `card-${acc.id}`;
@@ -911,7 +862,6 @@
             const today = new Date().toISOString().split('T')[0];
             const history = appState.history[accountId];
             
-            // If updating on the same day, replace it, otherwise push
             if (history.dates[history.dates.length - 1] === today) {
                 history.balances[history.balances.length - 1] = newBalance;
             } else {
@@ -927,19 +877,16 @@
         function calculateMillionaire() {
             const age = appState.age || 0;
             let targetAge = parseInt(document.getElementById('targetRetirementAge').value) || 65;
-            if (targetAge <= age) targetAge = age + 10; // Failsafe
+            if (targetAge <= age) targetAge = age + 10;
             
             const goal = 1000000;
             const rateInput = parseFloat(document.getElementById('targetInterestRate').value);
             const r = (isNaN(rateInput) || rateInput <= 0) ? 0.10 : (rateInput / 100);
             
-            // They save for exactly 10 years (or less if targetAge is very close)
             let yearsToSave = 10;
             if (targetAge - age < 10) yearsToSave = targetAge - age;
             
             const growthYears = targetAge - age - yearsToSave;
-            
-            // Formula: goal = PMT * ( ((1+r)^yearsToSave - 1) / r ) * (1+r)^growthYears
             const fvAnnuityFactor = (Math.pow(1 + r, yearsToSave) - 1) / r;
             const compoundFactor = Math.pow(1 + r, growthYears);
             
@@ -947,7 +894,6 @@
             
             document.getElementById('milPmtAmount').textContent = pmt.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
             
-            // Generate Chart Data
             const labels = [];
             const balances = [];
             let currentBal = 0;
@@ -1000,3 +946,44 @@
 
         function downloadText() {
             let txt = `🌟 ${appState.name}'s Money Dashboard 🌟\n`;
+            txt += `Age: ${appState.age}\n`;
+            txt += `Total: $${getTotalBalance().toFixed(2)}\n\n`;
+            appState.accounts.forEach(acc => {
+                txt += `${acc.icon} ${acc.name} (${acc.type}): $${getLatestBalance(acc.id).toFixed(2)}\n`;
+            });
+            const blob = new Blob([txt], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${appState.name}_dashboard.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadCSV() {
+            let csv = 'Account,Type,Balance\n';
+            appState.accounts.forEach(acc => {
+                csv += `"${acc.name}","${acc.type}",${getLatestBalance(acc.id)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${appState.name}_dashboard.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function hardReset() {
+            if (confirm('Are you sure? This will delete ALL data!')) {
+                localStorage.removeItem(STORAGE_KEY);
+                appState = { name: '', age: 6, accounts: [], history: {} };
+                showSetup();
+            }
+        }
+
+        // Initialize on page load
+        window.onload = loadState;
+    </script>
+</body>
+</html>
